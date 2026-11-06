@@ -50,53 +50,49 @@ st.markdown("""
         margin: 0 auto !important;
     }
 
-    /* 3. Force Horizontal Alignment on Mobile Columns (NO vertical stacking) */
+    /* 3. Force Horizontal Alignment on Mobile Columns (NO vertical stacking & NO overflow) */
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        gap: 8px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        gap: 6px !important;
         align-items: center !important;
     }
-    div[data-testid="column"] {
-        width: 100% !important;
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
         min-width: 0 !important;
-        flex: 1 1 0px !important;
+        box-sizing: border-box !important;
     }
 
     /* 4. Action Buttons & Popover unified row alignment */
     .stButton, .stPopover {
         width: 100% !important;
+        min-width: 0 !important;
     }
-    .stButton > button {
+    .stButton > button, .stPopover > button {
         width: 100% !important;
         height: 38px !important;
+        min-width: 0 !important;
         border-radius: 10px !important;
         font-weight: 600 !important;
-        font-size: 0.82rem !important;
-        padding: 0 0.4rem !important;
+        font-size: 0.8rem !important;
+        padding: 0 0.3rem !important;
         white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
     }
     .stPopover > button {
-        width: 100% !important;
-        height: 38px !important;
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        font-size: 0.82rem !important;
-        padding: 0 0.4rem !important;
-        white-space: nowrap !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background-color: #f1f5f9 !important;
+        background-color: #f8fafc !important;
         border: 1px solid #cbd5e1 !important;
         color: #334155 !important;
     }
     .stPopover > button:hover {
-        background-color: #e2e8f0 !important;
+        background-color: #f1f5f9 !important;
         border-color: #94a3b8 !important;
     }
 
@@ -273,7 +269,7 @@ tab_devices, tab_blocked, tab_batch, tab_settings = st.tabs([
 # WORKFLOW ①: [Devices] TAB - INDIVIDUAL ONE-TOUCH UNBLOCK
 # ==========================================
 with tab_devices:
-    col_search, col_refresh = st.columns([4, 1], gap="small")
+    col_search, col_refresh = st.columns([5, 1], gap="small")
     with col_search:
         search = st.text_input(
             "Search device",
@@ -341,7 +337,7 @@ with tab_devices:
         </div>
         """, unsafe_allow_html=True)
 
-        btn_col1, btn_col2 = st.columns([1, 1], gap="small")
+        btn_col1, btn_col2 = st.columns([1.3, 1], gap="small")
 
         # ① One-touch Individual Block / Unblock Toggle Button
         with btn_col1:
