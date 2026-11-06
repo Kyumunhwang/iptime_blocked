@@ -55,6 +55,7 @@ st.markdown("""
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
@@ -337,7 +338,7 @@ with tab_devices:
         </div>
         """, unsafe_allow_html=True)
 
-        btn_col1, btn_col2 = st.columns([1.3, 1], gap="small")
+        btn_col1, btn_col2, _ = st.columns([1.4, 1.0, 0.8], gap="small")
 
         # ① One-touch Individual Block / Unblock Toggle Button
         with btn_col1:
