@@ -1,0 +1,8 @@
+{
+  "name": "blocked-internet",
+  "version": "1.0.0",
+  "description": "Blocked Internet - Mobile Access Control App for ipTIME AX3000M",
+  "scripts": {
+    "dev:blocked-internet": "python -m streamlit run app.py --server.port 3088 --server.headless true"
+  }
+}
