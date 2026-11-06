@@ -1,12 +1,13 @@
 """
-Mobile Internet Access Control App for ipTIME AX3000M.
+Blocked Internet - Mobile Access Control App for ipTIME AX3000M.
 
-Option B Implementation:
-Rule deactivation (active: false) and reactivation (active: true) toggle mode.
-Provides 3 distinct unblocking workflows:
-1) Individual One-Touch Unblock in [Devices] tab
-2) Blocked Devices overview and One-Click "Unblock All" in [Blocked] tab
-3) Multi-select Batch Unblock in [Batch] tab
+Features:
+- Dual SSID Auto-Classification:
+  * 'School wifi' (Guest / Student devices): 67 connected devices
+  * 'edu' (Main / Staff devices): Protected staff devices
+- One-Click Bulk Access Control specifically for 'School wifi' students
+- 3 Recovery workflows: Devices individual unblock, Blocked overview, Batch unblock
+- Smartphone viewport optimized for portrait mode
 """
 
 from typing import Dict, List, Any
@@ -106,7 +107,7 @@ st.markdown("""
         color: white;
         padding: 14px 16px;
         border-radius: 18px;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -119,7 +120,7 @@ st.markdown("""
         margin-bottom: 4px;
     }
     .mobile-header-sub {
-        font-size: 0.76rem;
+        font-size: 0.74rem;
         color: #94a3b8;
     }
     .status-badge-online {
@@ -132,6 +133,24 @@ st.markdown("""
         display: inline-flex;
         align-items: center;
         gap: 4px;
+    }
+
+    /* School WiFi Quick Action Banner */
+    .school-wifi-banner {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 1px solid #bfdbfe;
+        border-radius: 14px;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+    }
+    .school-wifi-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #1e40af;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 4px;
     }
 
     /* Device Card UI */
@@ -193,6 +212,30 @@ st.markdown("""
         padding: 1px 5px;
         border-radius: 4px;
     }
+    .badge-student {
+        background-color: #e0e7ff;
+        color: #4338ca;
+        font-size: 0.66rem;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 6px;
+    }
+    .badge-staff {
+        background-color: #f3e8ff;
+        color: #7e22ce;
+        font-size: 0.66rem;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 6px;
+    }
+    .badge-wired {
+        background-color: #f1f5f9;
+        color: #475569;
+        font-size: 0.66rem;
+        font-weight: 600;
+        padding: 2px 6px;
+        border-radius: 6px;
+    }
 
     /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] {
@@ -215,7 +258,7 @@ if "controller" not in st.session_state:
 controller = st.session_state.controller
 
 # 4. Data Fetching
-with st.spinner("Syncing router rules..."):
+with st.spinner("Syncing router rules & SSIDs..."):
     try:
         devices = controller.get_connected_devices()
         system_status = controller.get_system_status()
@@ -226,14 +269,17 @@ with st.spinner("Syncing router rules..."):
         is_router_online = False
 
 total_count = len(devices)
+student_devices = [d for d in devices if d.get("ssid") == "School wifi"]
+staff_devices = [d for d in devices if d.get("ssid") == "edu"]
+student_count = len(student_devices)
+staff_count = len(staff_devices)
 blocked_count = sum(1 for d in devices if d.get("is_blocked", False))
-active_count = sum(1 for d in devices if d.get("is_active", False))
+student_blocked_count = sum(1 for d in student_devices if d.get("is_blocked", False))
 
 # 5. Mobile App Header
 status_color = "#10b981" if is_router_online else "#ef4444"
 status_text = "ONLINE" if is_router_online else "OFFLINE"
 
-# Read logo image as base64 for inline display
 logo_b64 = ""
 if os.path.exists("logo.png"):
     try:
@@ -254,13 +300,45 @@ st.markdown(f"""
     </div>
     <div class="mobile-header-sub">
         Total: <b>{total_count}</b> &nbsp;|&nbsp; 
-        Active: <b style="color:#10b981;">{active_count}</b> &nbsp;|&nbsp; 
+        Students (School wifi): <b style="color:#60a5fa;">{student_count}</b> &nbsp;|&nbsp; 
+        Staff (edu): <b style="color:#c084fc;">{staff_count}</b> &nbsp;|&nbsp; 
         Blocked: <b style="color:#ef4444;">{blocked_count}</b>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# 6. Tab Navigation: 3 Distinct Recovery Workflows
+# 6. School WiFi (Students) Dedicated One-Click Control Card
+st.markdown(f"""
+<div class="school-wifi-banner">
+    <div class="school-wifi-title">
+        <span>🏫 School wifi (Student Devices)</span>
+        <span style="font-size:0.75rem;font-weight:600;color:{'#ef4444' if student_blocked_count > 0 else '#1e40af'};">
+            Blocked: {student_blocked_count} / {student_count}
+        </span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+col_sw_blk, col_sw_unblk = st.columns([1, 1], gap="small")
+with col_sw_blk:
+    if st.button("🚫 Block All Students", key="btn_block_all_school_wifi", type="primary"):
+        with st.spinner("Blocking all 'School wifi' students..."):
+            res = controller.block_all_school_wifi()
+            st.success(f"Blocked {res['success']} student devices!")
+            time.sleep(0.5)
+            st.rerun()
+
+with col_sw_unblk:
+    if st.button("🔓 Unblock All Students", key="btn_unblock_all_school_wifi"):
+        with st.spinner("Unblocking all 'School wifi' students..."):
+            res = controller.unblock_all_school_wifi()
+            st.success(f"Unblocked {res['success']} student devices!")
+            time.sleep(0.5)
+            st.rerun()
+
+st.markdown("<div style='margin-bottom: 6px;'></div>", unsafe_allow_html=True)
+
+# 7. Tab Navigation
 tab_devices, tab_blocked, tab_batch, tab_settings = st.tabs([
     f"📱 Devices ({total_count})",
     f"🚫 Blocked ({blocked_count})",
@@ -286,14 +364,16 @@ with tab_devices:
 
     filter_choice = st.radio(
         "Filter Mode",
-        options=["All", "Active", "Blocked"],
+        options=["All", "Students", "Staff", "Blocked"],
         horizontal=True,
         label_visibility="collapsed"
     )
 
     filtered_devices = devices
-    if filter_choice == "Active":
-        filtered_devices = [d for d in filtered_devices if d.get("is_active", False)]
+    if filter_choice == "Students":
+        filtered_devices = [d for d in filtered_devices if d.get("ssid") == "School wifi"]
+    elif filter_choice == "Staff":
+        filtered_devices = [d for d in filtered_devices if d.get("ssid") == "edu"]
     elif filter_choice == "Blocked":
         filtered_devices = [d for d in filtered_devices if d.get("is_blocked", False)]
 
@@ -305,9 +385,10 @@ with tab_devices:
             or q in d.get("ip", "").lower()
             or q in d.get("mac", "").lower()
             or q in d.get("hostname", "").lower()
+            or q in d.get("ssid", "").lower()
         ]
 
-    st.caption(f"Showing {len(filtered_devices)} devices (Option B: Rule Toggle Mode)")
+    st.caption(f"Showing {len(filtered_devices)} devices")
 
     for dev in filtered_devices:
         ip = dev.get("ip", "")
@@ -318,6 +399,16 @@ with tab_devices:
         has_rule = dev.get("has_rule", False)
         rule_name = dev.get("block_rule_name", "")
         group = dev.get("group", "General")
+        ssid = dev.get("ssid", "Wireless")
+        network_role = dev.get("network_role", "General")
+
+        # SSID Badge styling
+        if ssid == "School wifi":
+            ssid_badge = "<span class='badge-student'>🎒 School wifi</span>"
+        elif ssid == "edu":
+            ssid_badge = "<span class='badge-staff'>👔 edu (Staff)</span>"
+        else:
+            ssid_badge = "<span class='badge-wired'>🔌 Wired</span>"
 
         # Card status styling
         card_class = "device-card-blocked" if is_blocked else ("device-card-active" if is_active else "device-card-idle")
@@ -332,11 +423,11 @@ with tab_devices:
         <div class="device-card {card_class}">
             <div class="device-title">
                 <span>{alias}</span>
-                {badge_html}
+                <span>{ssid_badge} &nbsp; {badge_html}</span>
             </div>
             <div class="device-meta">
                 IP: {ip} &nbsp;|&nbsp; MAC: {mac}<br>
-                Host: {dev['hostname']} &nbsp;|&nbsp; Group: {group}
+                Host: {dev.get('hostname', 'N/A')} &nbsp;|&nbsp; Group: {group}
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -406,11 +497,12 @@ with tab_blocked:
             b_mac = b_dev.get("mac", "")
             b_rule = b_dev.get("block_rule_name", "")
             b_group = b_dev.get("group", "General")
+            b_ssid = b_dev.get("ssid", "Wireless")
 
             col_b_info, col_b_btn1, col_b_btn2 = st.columns([3, 1.2, 1], gap="small")
             with col_b_info:
                 st.markdown(f"**{b_alias}** ({b_ip})")
-                st.caption(f"Rule: `{b_rule}` | Group: {b_group}")
+                st.caption(f"SSID: `{b_ssid}` | Rule: `{b_rule}`")
             with col_b_btn1:
                 # Individual unblock in Blocked tab
                 if st.button("🔓 Unblock", key=f"tab_unblk_{b_ip}_{b_mac}"):
@@ -436,7 +528,10 @@ with tab_batch:
     st.subheader("Multi-Select Batch Access Control")
     st.caption("Select multiple student/staff devices to apply bulk toggle operations.")
 
-    select_all = st.checkbox("Select All Devices")
+    col_sel_students, col_sel_all = st.columns([1, 1], gap="small")
+    select_all = False
+    with col_sel_all:
+        select_all = st.checkbox("Select All Devices")
 
     selected_targets: List[Dict[str, str]] = []
     selected_rules_for_unblock: List[str] = []
@@ -447,9 +542,10 @@ with tab_batch:
         d_mac = dev.get("mac", "")
         d_blocked = dev.get("is_blocked", False)
         d_rule = dev.get("block_rule_name", "")
+        d_ssid = dev.get("ssid", "Wireless")
 
         status_text = "🚫 BLOCKED" if d_blocked else "ONLINE"
-        label = f"{d_alias} ({d_ip}) - [{status_text}]"
+        label = f"[{d_ssid}] {d_alias} ({d_ip}) - [{status_text}]"
         is_checked = st.checkbox(label, value=select_all, key=f"batch_chk_{d_ip}_{d_mac}")
         if is_checked:
             target_id = d_mac if d_mac != "N/A" else d_ip
@@ -481,10 +577,10 @@ with tab_batch:
 
 
 # ==========================================
-# TAB 4: ROUTER STATUS & TOGGLE CONFIG
+# TAB 4: ROUTER STATUS & DUAL SSID CONFIG
 # ==========================================
 with tab_settings:
-    st.subheader("Router Status & Mode")
+    st.subheader("Router & Dual SSID Network")
 
     st.markdown(f"""
     - **Control Mode:** `Option B (Rule Toggle / Deactivation)`
@@ -492,7 +588,9 @@ with tab_settings:
     - **Firmware Version:** `{system_status.get('version', 'N/A')}`
     - **Uptime:** `{system_status.get('uptime_seconds', 0) // 3600}h {(system_status.get('uptime_seconds', 0) % 3600) // 60}m`
     - **Subnet Range:** `{system_status.get('dhcp_range', '192.168.4.2 - 192.168.4.199')}`
-    - **EasyMesh Role:** `{system_status.get('easymesh_role', 'Controller')}`
+    - **Dual SSID Mapping:**
+      * 🎒 **`School wifi` (Students):** Guest network (BSS ending with `.2`) - `{student_count}` devices connected
+      * 👔 **`edu` (Staff):** Main network (BSS ending with `.1`) - `{staff_count}` devices connected (Protected)
     """)
 
     st.divider()
