@@ -55,7 +55,6 @@ st.markdown("""
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        justify-content: flex-start !important;
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
@@ -64,13 +63,16 @@ st.markdown("""
     }
     div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
         min-width: 0 !important;
+        max-width: 100% !important;
         box-sizing: border-box !important;
+        overflow: hidden !important;
     }
 
     /* 4. Action Buttons & Popover unified row alignment */
     .stButton, .stPopover {
         width: 100% !important;
         min-width: 0 !important;
+        box-sizing: border-box !important;
     }
     .stButton > button, .stPopover > button {
         width: 100% !important;
@@ -78,14 +80,15 @@ st.markdown("""
         min-width: 0 !important;
         border-radius: 10px !important;
         font-weight: 600 !important;
-        font-size: 0.8rem !important;
-        padding: 0 0.3rem !important;
+        font-size: 0.78rem !important;
+        padding: 0 4px !important;
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
+        box-sizing: border-box !important;
     }
     .stPopover > button {
         background-color: #f8fafc !important;
@@ -338,7 +341,7 @@ with tab_devices:
         </div>
         """, unsafe_allow_html=True)
 
-        btn_col1, btn_col2, _ = st.columns([1.4, 1.0, 0.8], gap="small")
+        btn_col1, btn_col2 = st.columns([1.2, 1], gap="small")
 
         # ① One-touch Individual Block / Unblock Toggle Button
         with btn_col1:
