@@ -29,21 +29,82 @@ st.set_page_config(
 # 2. Smartphone Mobile Frame Custom CSS
 st.markdown("""
 <style>
-    /* Container restricted to mobile phone viewport width */
+    /* 1. Hide default Streamlit header bar to prevent top clipping */
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
+    #MainMenu {
+        visibility: hidden !important;
+    }
+    footer {
+        visibility: hidden !important;
+    }
+
+    /* 2. Mobile Container Layout with Safe Top Margin */
     .block-container {
         max-width: 440px !important;
-        padding-top: 0.8rem !important;
+        padding-top: 1.2rem !important;
         padding-bottom: 2rem !important;
         padding-left: 0.8rem !important;
         padding-right: 0.8rem !important;
         margin: 0 auto !important;
     }
 
+    /* 3. Force Horizontal Alignment on Mobile Columns (NO vertical stacking) */
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 8px !important;
+        align-items: center !important;
+    }
+    div[data-testid="column"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        flex: 1 1 0px !important;
+    }
+
+    /* 4. Action Buttons & Popover unified row alignment */
+    .stButton, .stPopover {
+        width: 100% !important;
+    }
+    .stButton > button {
+        width: 100% !important;
+        height: 38px !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        font-size: 0.82rem !important;
+        padding: 0 0.4rem !important;
+        white-space: nowrap !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .stPopover > button {
+        width: 100% !important;
+        height: 38px !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        font-size: 0.82rem !important;
+        padding: 0 0.4rem !important;
+        white-space: nowrap !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background-color: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #334155 !important;
+    }
+    .stPopover > button:hover {
+        background-color: #e2e8f0 !important;
+        border-color: #94a3b8 !important;
+    }
+
     /* Smartphone Frame Header */
     .mobile-header {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         color: white;
-        padding: 16px;
+        padding: 14px 16px;
         border-radius: 18px;
         margin-bottom: 12px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
@@ -133,15 +194,6 @@ st.markdown("""
         border-radius: 4px;
     }
 
-    /* Touch-friendly Buttons */
-    .stButton > button {
-        width: 100%;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 0.82rem;
-        padding: 0.35rem 0.5rem;
-    }
-
     /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 4px;
@@ -221,7 +273,7 @@ tab_devices, tab_blocked, tab_batch, tab_settings = st.tabs([
 # WORKFLOW ①: [Devices] TAB - INDIVIDUAL ONE-TOUCH UNBLOCK
 # ==========================================
 with tab_devices:
-    col_search, col_refresh = st.columns([4, 1])
+    col_search, col_refresh = st.columns([4, 1], gap="small")
     with col_search:
         search = st.text_input(
             "Search device",
@@ -289,7 +341,7 @@ with tab_devices:
         </div>
         """, unsafe_allow_html=True)
 
-        btn_col1, btn_col2 = st.columns([1, 1])
+        btn_col1, btn_col2 = st.columns([1, 1], gap="small")
 
         # ① One-touch Individual Block / Unblock Toggle Button
         with btn_col1:
@@ -355,7 +407,7 @@ with tab_blocked:
             b_rule = b_dev.get("block_rule_name", "")
             b_group = b_dev.get("group", "General")
 
-            col_b_info, col_b_btn1, col_b_btn2 = st.columns([3, 1.2, 1])
+            col_b_info, col_b_btn1, col_b_btn2 = st.columns([3, 1.2, 1], gap="small")
             with col_b_info:
                 st.markdown(f"**{b_alias}** ({b_ip})")
                 st.caption(f"Rule: `{b_rule}` | Group: {b_group}")
@@ -409,7 +461,7 @@ with tab_batch:
     st.markdown("---")
     st.write(f"Selected: **{len(selected_targets)}** devices")
 
-    col_batch_block, col_batch_unblock = st.columns(2)
+    col_batch_block, col_batch_unblock = st.columns(2, gap="small")
     with col_batch_block:
         if st.button("🚫 Batch Block", type="primary", disabled=len(selected_targets) == 0):
             with st.spinner("Applying batch block..."):
