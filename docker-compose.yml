@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  blocked-internet:
+    build: .
+    image: blocked-internet:latest
+    container_name: blocked-internet
+    restart: always
+    network_mode: host
+    volumes:
+      - ./config.json:/app/config.json
+      - ./devices.json:/app/devices.json
+    environment:
+      - TZ=Asia/Seoul
